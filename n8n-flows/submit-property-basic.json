@@ -1,0 +1,90 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "submit-property",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        -160
+      ],
+      "id": "50e3c9af-e621-4354-ac31-6bb96243241c",
+      "name": "Webhook",
+      "webhookId": "e8048b4b-2d0c-4d41-9b17-08727aa51912"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8001/query",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"description\": \"{{$json.body.description}}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -208,
+        -160
+      ],
+      "id": "cb34ae8d-4545-4926-afb8-a5fed3dd298b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "fd8439b5-d180-4eff-a62f-c5c27f2a184b",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4543772e-11c2-4026-8041-a4e8d8c0a66c",
+  "meta": {
+    "instanceId": "82d305bfe1c1b16935b3a127a027ea2a1d28d88f7ed1e5ee08a34a1f0bfac94d"
+  },
+  "nodeGroups": [],
+  "id": "9jK2UHOJEtm3wrfs",
+  "tags": []
+}
