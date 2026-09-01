@@ -1,0 +1,9 @@
+# --- not_empty_or_malformed thresholds ---
+MIN_DESCRIPTION_LENGTH = 10
+MIN_ALPHA_RATIO = 0.5
+MAX_REPEATED_CHAR_RUN = 6
+
+# --- spam thresholds ---
+SPAM_MAX_EXCLAMATIONS = 3
+SPAM_MAX_CAPS_RATIO = 0.6
+SPAM_CAPS_MIN_LENGTH = 15
