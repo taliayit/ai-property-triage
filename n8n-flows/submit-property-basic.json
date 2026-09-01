@@ -11,7 +11,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -416,
+        -608,
         -160
       ],
       "id": "50e3c9af-e621-4354-ac31-6bb96243241c",
@@ -23,15 +23,21 @@
         "method": "POST",
         "url": "http://host.docker.internal:8001/query",
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\"description\": \"{{$json.body.description}}\"}",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "description",
+              "value": "={{ $node[\"Webhook\"].json.body.description }}"
+            }
+          ]
+        },
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -208,
-        -160
+        48,
+        -176
       ],
       "id": "cb34ae8d-4545-4926-afb8-a5fed3dd298b",
       "name": "HTTP Request"
@@ -43,11 +49,69 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        0,
-        -160
+        288,
+        48
       ],
       "id": "fd8439b5-d180-4eff-a62f-c5c27f2a184b",
       "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8002/check",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "description",
+              "value": "={{$json.body.description}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -400,
+        -160
+      ],
+      "id": "18bf3d15-de64-450d-bfdb-5d648e2bf696",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d1b77447-7e38-4730-bd66-e26f2f3c5f3a",
+              "leftValue": "={{$json.passed}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        -160
+      ],
+      "id": "ff05ef4a-a6df-495a-b8ef-60b0e5edad7e",
+      "name": "If"
     }
   ],
   "pinData": {},
@@ -56,7 +120,7 @@
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "HTTP Request2",
             "type": "main",
             "index": 0
           }
@@ -73,6 +137,40 @@
           }
         ]
       ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -80,7 +178,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "4543772e-11c2-4026-8041-a4e8d8c0a66c",
+  "versionId": "55d24580-dcea-4fbf-aa1d-e86eb8a2eafa",
   "meta": {
     "instanceId": "82d305bfe1c1b16935b3a127a027ea2a1d28d88f7ed1e5ee08a34a1f0bfac94d"
   },
