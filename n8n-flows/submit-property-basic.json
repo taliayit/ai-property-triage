@@ -11,7 +11,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -608,
+        -896,
         -160
       ],
       "id": "50e3c9af-e621-4354-ac31-6bb96243241c",
@@ -36,7 +36,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        48,
+        -240,
         -176
       ],
       "id": "cb34ae8d-4545-4926-afb8-a5fed3dd298b",
@@ -49,7 +49,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        288,
+        0,
         48
       ],
       "id": "fd8439b5-d180-4eff-a62f-c5c27f2a184b",
@@ -58,12 +58,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:8002/check",
+        "url": "http://host.docker.internal:8002/check/input",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
             {
-              "name": "description",
+              "name": "text",
               "value": "={{$json.body.description}}"
             }
           ]
@@ -73,7 +73,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -400,
+        -688,
         -160
       ],
       "id": "18bf3d15-de64-450d-bfdb-5d648e2bf696",
@@ -91,7 +91,7 @@
           "conditions": [
             {
               "id": "d1b77447-7e38-4730-bd66-e26f2f3c5f3a",
-              "leftValue": "={{$json.passed}}",
+              "leftValue": "={{$json.pass}}",
               "rightValue": "",
               "operator": {
                 "type": "boolean",
@@ -107,11 +107,76 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -224,
+        -512,
         -160
       ],
       "id": "ff05ef4a-a6df-495a-b8ef-60b0e5edad7e",
       "name": "If"
+    },
+    {
+      "parameters": {
+        "text": "Open-plan office space on the 6th floor of a modern high-rise, suitable for a team of 20-30, with meeting rooms, a kitchenette, and 24/7 building access.",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "property_type",
+              "description": "The type Node 4 — Information Extractor (Prompt Engineering Surface) An n8n Information Extractor node backed by a Gemini LM node. Extracts structured fields: property type, location, price, number of rooms, key features, and any mentioned certifications. Students must design the attribute definitions and the system prompt template. This is a major prompt engineering task. Prompt Engineering Task — Node 4 Write the systemPromptTemplate for the Information Extractor. It must instruct the model to extract only facts present in the text, handle missing fields gracefully, and return consistent types. Iterate at least 5 times, documenting failures and improvements each time.ommercial.",
+              "required": true
+            },
+            {
+              "name": "price",
+              "type": "number",
+              "description": "The listing price in the local currency, as a plain number without currency symbols or commas."
+            },
+            {
+              "name": "rooms",
+              "type": "number",
+              "description": "The total room count. If stated explicitly, use it. If only bedroom count is given, add 1 for a living room. If neither is stated, leave this field empty."
+            },
+            {
+              "name": "location",
+              "description": "The neighborhood, city, or general area mentioned in the listing, if any. Leave empty if no location is mentioned."
+            },
+            {
+              "name": "key_features",
+              "description": "A comma-separated list of notable features explicitly mentioned in the listing (e.g. \"renovated kitchen, private garden, parking spot\"). Extract only features actually stated in the text. Leave empty if none are mentioned."
+            },
+            {
+              "name": "certifications",
+              "description": "A comma-separated list of certifications, ratings, or official approvals explicitly mentioned (e.g. \"energy rating A, LEED certified\"). Leave empty if none are mentioned."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        -224
+      ],
+      "id": "c06a9fa3-bfc3-4f02-bdc8-da9dacb578ac",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        0
+      ],
+      "id": "2b734a5e-2e5c-4a72-9890-e528801b5284",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ZXH6hKAZCGAfJeC4",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -171,15 +236,28 @@
           }
         ]
       ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "versionId": "55d24580-dcea-4fbf-aa1d-e86eb8a2eafa",
+  "versionId": "a9137aeb-515c-47d8-bd48-839c2d4b3976",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "82d305bfe1c1b16935b3a127a027ea2a1d28d88f7ed1e5ee08a34a1f0bfac94d"
   },
   "nodeGroups": [],
