@@ -130,6 +130,85 @@ LISTINGS = [
         "price": 560000,
         "rooms": 4,
     },
+    {
+        "property_type": "apartment",
+        "description": (
+            "Luxury 2-bedroom apartment on the top floor with floor-to-ceiling "
+            "windows, a private elevator entrance, and access to a rooftop "
+            "pool. Located in a prestigious downtown building."
+        ),
+        "price": 750000,
+        "rooms": 3,
+    },
+    {
+        "property_type": "apartment",
+        "description": (
+            "Affordable 1-bedroom apartment near the university, recently "
+            "painted, includes a dishwasher and in-building laundry room. "
+            "Great for students or first-time buyers."
+        ),
+        "price": 145000,
+        "rooms": 2,
+    },
+    {
+        "property_type": "apartment",
+        "description": (
+            "Duplex apartment with two levels, a private entrance, and a "
+            "small patio garden. Close to shops and public transit."
+        ),
+        "price": 310000,
+        "rooms": 4,
+    },
+    {
+        "property_type": "house",
+        "description": (
+            "Mid-century modern 3-bedroom home with original hardwood floors, "
+            "a converted attic office, and a detached one-car garage. "
+            "Recently listed after light renovation."
+        ),
+        "price": 395000,
+        "rooms": 4,
+    },
+    {
+        "property_type": "house",
+        "description": (
+            "Sprawling 6-bedroom estate on 2 acres with a guest house, an "
+            "in-ground pool, and a three-car garage. Gated entrance and "
+            "mature landscaping throughout."
+        ),
+        "price": 1250000,
+        "rooms": 8,
+    },
+    {
+        "property_type": "house",
+        "description": (
+            "Starter 2-bedroom bungalow with a small fenced yard and an "
+            "updated electrical panel. Needs a new roof but otherwise "
+            "move-in ready."
+        ),
+        "price": 245000,
+        "rooms": 3,
+    },
+    {
+        "property_type": "commercial",
+        "description": (
+            "Mixed-use building with ground-floor retail and two rental "
+            "apartments above. Recently rewired, with separate utility "
+            "meters for each unit."
+        ),
+        "price": 680000,
+        "rooms": 6,
+    },
+    {
+        "property_type": "commercial",
+        "description": (
+            "Vacant commercial lot zoned for retail development, corner "
+            "location with high visibility and existing utility hookups. "
+            "No structures currently on site."
+        ),
+        "price": 295000,
+        "rooms": 0,
+    },
 ]
 
 
