@@ -3,3 +3,6 @@ uvicorn[standard]
 sentence-transformers
 chromadb
 pydantic
+langchain-core
+langchain-community
+llama-cpp-python
