@@ -139,3 +139,212 @@ Recommendations for v2:
   instruction more reliably before assuming this is purely a prompting
   problem - 1B models are known to struggle with multi-constraint
   instructions regardless of how the prompt is worded.
+
+Note on versioning below: v1 surfaced three distinct hard-requirement
+failures (fabrication, missing citation, forced comparison) but the
+required structure only allots two "targeted iteration" slots (v2-v3)
+before "refinement" (v4-v5). Prioritized by severity - fabrication is the
+most dangerous to ship (false price/feature info reaching an agent), so
+it's tackled first, then forced comparison (also a hard requirement,
+and the more embarrassing failure mode), with missing-citation and a
+refinement pass following under "refinement."
+
+### v2 - fix: submission/listing fact conflation
+Failure (one sentence): the model stated a retrieved listing's price and
+features as if they belonged to the new submission itself (v1's "Small
+studio, good location" and "2-bedroom apartment for rent downtown"
+queries).
+
+Fix attempted: added rule 6 to `INSIGHT_SYSTEM_PROMPT` - the submission's
+own price/room count/features are only what's in its own text; a fact
+from a listing must be attributed explicitly to that listing, never
+implied about the submission.
+
+Retest:
+- "Small studio, good location" -> "This submission is a good match for
+  [Listing 1], which also features a cozy studio apartment. The new
+  submission's description highlights the ideal location and amenities,
+  making it a strong contender to be compared to [Listing 1]." No price
+  stated for the submission (was: "priced at $165,000" in v1). Fixed for
+  this case.
+- "2-bedroom apartment for rent downtown, good condition" -> prices now
+  correctly attributed per-listing ("[Listing 1] priced at $750,000
+  compared to [Listing 3] which is priced at $310,000"), and the
+  invented "one bathroom" from v1 is gone. But: "which shares the
+  luxurious features such as a private elevator entrance, floor-to-
+  ceiling windows, and access to a rooftop pool" still implies the
+  submission has those features via "shares," without ever literally
+  stating them as submission facts - the rule doesn't catch implication,
+  only direct assertion.
+
+Result: Partial fix. Eliminated the direct-assertion form of fabrication
+(stating a specific number/feature as the submission's own), but left an
+implication-shaped loophole open - carried into v5.
+
+### v3 - fix: forced comparison on off-domain queries
+Failure (one sentence): an off-domain query (a sailboat) got evaluated as
+if it were a property listing instead of triggering "no good match,"
+even though retrieval correctly ranked it far below genuine matches.
+
+Fix attempted: not a prompt change - a deterministic code-level gate.
+Added `MAX_RELEVANT_DISTANCE = 1.2` to config.py (chosen from v1 data:
+genuine matches scored 0-0.96, the sailboat scored 1.44-1.66) and a check
+in `generate_insight`: if the closest retrieved listing's distance
+exceeds this, skip the LLM call entirely and return a canned "No
+sufficiently similar listings were found for this submission." This
+doesn't rely on the model recognizing a bad match - retrieval already
+signals it reliably, so the code acts on that signal directly.
+
+Retest:
+- Sailboat query -> "No sufficiently similar listings were found for
+  this submission." in 0.5s (LLM never invoked). Fixed.
+- Regression check (near-exact apartment match) -> LLM still invoked
+  normally, correct citation, no fabrication. No regression.
+
+Result: Complete, robust fix for this failure mode - deterministic, so
+not subject to model-generation variance the way a prompt-only fix would
+be.
+
+### v4 - fix: missing citations
+Failure (one sentence): a response accurately described a retrieved
+listing's real features but never used a single `[Listing N]` citation
+tag anywhere, failing the "must cite" hard requirement outright despite
+having no fabricated content.
+
+Fix attempted: reinforced the citation instruction by moving it to right
+before the generation cue (recency bias - small models tend to follow
+instructions closer to where generation starts more reliably than ones
+stated once, earlier, in a longer system prompt). `TASK_TEMPLATE` now
+ends with `"(Remember: cite every listing you reference using its exact
+tag, e.g. [Listing 1].)\nInsight:"` instead of going straight to
+`"Insight:"`.
+
+Retest:
+- The exact query that failed to cite in v1 (ground-floor retail unit)
+  now produces "[Listing 1]" and "[Listing 2]" tags correctly.
+- Spot check on "Small studio, good location" also cites [Listing 1]
+  and [Listing 3] correctly (and price attribution from the v2 fix still
+  holds alongside this change).
+
+Result: Fixed in every case retested. Not proven to be 100% reliable
+(still a prompt-level fix, so subject to the same model variance as any
+instruction), but no missing-citation case reappeared in later testing
+either.
+
+### v5 - refinement: implicit feature-sharing loophole
+Failure (one sentence): even after v2, the model could still imply the
+submission has a listing's feature via "both listings share/have/
+feature" phrasing without ever directly asserting a fact "for the
+submission" - functionally the same fabrication, worded around the
+letter of rule 6.
+
+Fix attempted: added rule 7 - never say the submission and a listing
+"share," "both have," or "both feature" something unless that exact
+thing is written in the submission text; attribute listing-only features
+to that listing by name instead.
+
+Retest:
+- "2-bedroom apartment for rent downtown, good condition" (previously
+  had this issue) -> now says "[Listing 1], which offers..." and "While
+  [Listing 3] is also a duplex apartment, it lacks the prestige..." -
+  correctly scoped to the listings, no implied submission features.
+  Fixed for this case.
+- "Small studio, good location" (previously had this issue) -> "Both
+  listings highlight the benefits of living in a converted industrial
+  space, with exposed brick walls and high ceilings." Still implies the
+  submission has brick walls/high ceilings - the model substituted
+  "highlight the benefits of" for the banned "share"/"both have"/"both
+  feature" phrases and reproduced the same fabrication through a phrase
+  the rule didn't name.
+
+Result: Partial fix - one of two retest cases cleared, the other found a
+different wording that reintroduces the same problem. This is the
+clearest evidence in this log that narrow phrase-banning has diminishing
+returns: patching specific wordings doesn't close the underlying
+tendency to generalize "both X" across submission and listing. A
+structural fix (e.g. forcing the model to name its subject explicitly
+per clause, or a two-pass generate-then-verify approach) would likely be
+needed to close this fully - out of scope for this baseline.
+
+## Final design and evaluation
+
+Final design = v5's prompt/code as tested above: a 7-rule system prompt
+(grounding, citation, relevance, decline-when-no-match, length,
+no-submission-fact-invention, no-implied-sharing), one fixed positive
+few-shot example, a deterministic distance-threshold gate that skips the
+LLM entirely below `MAX_RELEVANT_DISTANCE`, and a citation-range check
+logged (not returned) as a diagnostic signal.
+
+Justification for shipping this as the baseline rather than iterating
+further: the two failure modes with deterministic, code-level fixes
+(off-domain forced comparison, and by extension anything gated on
+retrieval distance) are now fully resolved and not subject to model
+variance. The two failure modes that are pure prompt-engineering targets
+(missing citations, fact conflation) are substantially improved but not
+airtight - and the v5 result shows that further prompt patching hits
+diminishing returns with this 1B model. Rather than keep adding rules
+indefinitely, this is the point to stop, measure honestly, and record
+what's actually shipped: a system that is reliable on the mechanically-
+checkable failure mode and meaningfully better (not perfect) on the two
+that require the model to reason about what it was and wasn't told.
+
+### Test suite (12 cases) and pass criteria
+
+A case **passes** if: (a) it doesn't state or imply any price, room
+count, or feature for the submission that isn't in the submission's own
+text, and (b) it declines (via the distance gate) when nothing is a good
+match, or cites at least one genuinely relevant listing when something
+is. Verbosity and the "compares Listing A to Listing B instead of the
+submission" drift noted since v1 are **not** gating - they're a real,
+open quality issue (see Known limitations below) but not a hard-
+requirement violation per the spec's original three musts (grounded,
+cited, non-fabricated).
+
+| # | Query | Category | Result |
+|---|-------|----------|--------|
+| 1 | Near-exact apartment match | exact match | **PASS** - 1 sentence, correct citation, no fabrication |
+| 2 | Near-exact house match | exact match | **PASS** - same |
+| 3 | Near-exact commercial match | exact match | **PASS** - citation used, facts genuinely in submission text |
+| 4 | Sailboat (off-domain) | decline | **PASS** - distance gate declined correctly |
+| 5 | Used sedan (off-domain) | decline | **PASS** - distance gate declined correctly |
+| 6 | "Small studio, good location" | sparse/generic | **FAIL** - "Both listings highlight... exposed brick walls and high ceilings" not in submission (the v5 loophole) |
+| 7 | "2-bedroom apartment for rent downtown, good condition" | generic | **FAIL** - "offers similar amenities, including a renovated kitchen, hardwood floors, and a small balcony" - none in submission, uncited source |
+| 8 | "Family house with a garden, needs some work, good schools nearby" | generic | **PASS** (borderline) - "both listings highlight the importance of having a private outdoor space" is a fair generalization over the submission's own "garden," not an invented concrete feature |
+| 9 | "Office space downtown available for lease" | generic | **FAIL** - "both cases" use of meeting rooms and a kitchenette; neither is in the submission |
+| 10 | "House for sale" (minimal, on-domain) | sparse | **PASS** - explicitly noted the submission "does not mention any specific price range, room count, or features" instead of inventing any |
+| 11 | "4-bedroom house under $300,000 in a quiet neighborhood" | numeric constraint | **FAIL** - claims the submission "highlights its... mid-century modern design and recently listed after light renovation," which are a *different*, uncited listing's facts, plus an invented "close to good schools" |
+| 12 | "Looking for a small retail space or a compact apartment near downtown" | mixed-intent | **FAIL** - "also features a renovated kitchen and hardwood floors" and "proximity to the metro station," neither in the submission |
+
+**Pass rate: 7/12 (58%).**
+
+The failure pattern is clean and consistent: **6/6 (100%)** on near-exact
+matches and off-domain declines (cases 1-5, 10) - the cases where the
+model can largely echo back what's already there, or where the
+distance gate acts before the LLM runs at all. **1/5 (20%)** on
+generic/ambiguous queries where the model has to actively synthesize a
+comparison across multiple plausible listings (cases 6, 7, 9, 11, 12) -
+this is where it reliably reaches for a plausible-sounding shared detail
+that isn't actually grounded in the submission. Case 11 is the most
+concerning single result: it attributes facts from a listing it doesn't
+even cite by number directly to the submission's own description.
+
+### Known limitations carried into this baseline
+- Fact conflation (v2/v5's target) is fixed for direct assertions but
+  not for generalized/implied sharing language, and specifically fails
+  on generic multi-candidate queries - the most common real-world input
+  shape, not an edge case.
+- Verbosity and "compares Listing A to Listing B instead of the
+  submission" drift (noted since v1) is still present and unaddressed -
+  it was deliberately left out of scope for this iteration to focus on
+  the hard-requirement failures, but should be next if this continues.
+- The logged citation-range check still only catches out-of-range
+  listing numbers; it caught none of the 5 failures above, all of which
+  were fluent, plausible-sounding, and involved either valid citations
+  or none at all. It should not be read as a fabrication safety net.
+- Per v1's recommendation, wiring `guardrails-service`'s `/check/output`
+  in as a second, independent audit pass has still not been done - given
+  the 42% failure rate measured here on generic queries, that's a higher
+  priority than it looked after v1's smaller test set.
+- This remains a single 1B-parameter model; a larger instruct model
+  might resolve the synthesis-time fabrication pattern directly rather
+  than needing further prompt engineering.

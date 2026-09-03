@@ -16,3 +16,8 @@ LLM_N_CTX = 4096
 LLM_N_THREADS = os.cpu_count() or 4
 LLM_MAX_TOKENS = 300
 LLM_TEMPERATURE = 0.1  # low temperature: this is a grounded-summary task, not creative writing
+
+# Below this, listings are too dissimilar to compare - skip the LLM and
+# return a canned decline. Value chosen from v1 log data (see
+# docs/prompt-engineering-log.md).
+MAX_RELEVANT_DISTANCE = 1.2

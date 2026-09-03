@@ -20,6 +20,7 @@ from config import (
     LLM_N_CTX,
     LLM_N_THREADS,
     LLM_TEMPERATURE,
+    MAX_RELEVANT_DISTANCE,
     PERSIST_DIRECTORY,
 )
 
@@ -48,10 +49,25 @@ INSIGHT_SYSTEM_PROMPT = (
     "3. Only cite a listing if it's genuinely relevant to the new submission.\n"
     "4. If none of the listings are a good match, say so plainly instead of "
     "forcing a comparison.\n"
-    "5. Write 2-4 sentences. No preamble, no headers - just the insight."
+    "5. Write 2-4 sentences. No preamble, no headers - just the insight.\n"
+    "6. The new submission's own price, room count, and features are ONLY "
+    "what's written in its \"New submission\" text. Never state a price, "
+    "room count, or feature for the submission itself unless it appears "
+    "there - even if a similar number or feature appears in one of the "
+    "listings. If you want to mention that a listing has a certain price "
+    "or feature, attribute it explicitly to that listing, not to the "
+    "submission.\n"
+    "7. Never say the submission and a listing \"share\", \"both have\", or "
+    "\"both feature\" something unless that exact thing is written in the "
+    "submission text. If a feature is only in the listing, say \"[Listing "
+    "N] has...\" - don't imply the submission has it too."
 )
 
-TASK_TEMPLATE = 'New submission: "{query_description}"\nListings:\n{listings_block}\nInsight:'
+TASK_TEMPLATE = (
+    'New submission: "{query_description}"\nListings:\n{listings_block}\n'
+    "(Remember: cite every listing you reference using its exact tag, e.g. "
+    "[Listing 1].)\nInsight:"
+)
 
 EXAMPLE_LISTINGS = [
     {
@@ -161,6 +177,9 @@ class QueryRequest(BaseModel):
 def generate_insight(query_description: str, similar_listings: list[dict]) -> str:
     if not similar_listings:
         return "No similar listings were found in the knowledge base."
+
+    if similar_listings[0]["distance"] > MAX_RELEVANT_DISTANCE:
+        return "No sufficiently similar listings were found for this submission."
 
     raw = insight_chain.invoke(
         {

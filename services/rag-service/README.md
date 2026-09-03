@@ -93,16 +93,26 @@ Response shape:
       "distance": 0.0
     }
   ],
-  "insight": "This new submission is a strong contender for comparison to [Listing 1]. Both properties feature an open-concept living area, modern kitchen island, and a two-car garage. ..."
+  "insight": "This new submission is comparable to [Listing 1], a newly built 5-bedroom family home with an open-concept living area, modern kitchen island, and a two-car garage."
 }
 ```
 
-Every generated insight is checked server-side for `[Listing N]` citations
-that don't correspond to an actually-retrieved listing, and a warning is
-logged when found — this is a mechanical guard, not a fact-checker, and
-isn't part of the response. It **cannot** catch every way the model can
-violate the "don't fabricate" rule — see
-[docs/prompt-engineering-log.md](../../docs/prompt-engineering-log.md) for
-concrete cases (e.g. the model stating a price for the submission that
-only appeared in a retrieved listing) that it misses entirely. Treat
-`insight` as a draft for a human to review, not a verified fact sheet.
+If the closest retrieved listing is too dissimilar to be worth comparing
+against (distance above `MAX_RELEVANT_DISTANCE` in `config.py`), the LLM
+is skipped entirely and `insight` is a canned
+`"No sufficiently similar listings were found for this submission."` —
+this is a deterministic guard, not something the model decides for
+itself.
+
+Every generated insight is also checked server-side for `[Listing N]`
+citations that don't correspond to an actually-retrieved listing, and a
+warning is logged when found — this is a mechanical guard, not a
+fact-checker, and isn't part of the response. It **cannot** catch every
+way the model can violate the "don't fabricate" rule — see
+[docs/prompt-engineering-log.md](../../docs/prompt-engineering-log.md)
+for the full iteration history and a measured **7/12 pass rate** on a
+test suite covering exact matches, off-domain queries, and generic
+multi-candidate queries (the last category is where it still fails most
+often — inventing or implying a submission feature that only exists in a
+retrieved listing). Treat `insight` as a draft for a human to review, not
+a verified fact sheet.
