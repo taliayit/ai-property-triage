@@ -348,3 +348,29 @@ even cite by number directly to the submission's own description.
 - This remains a single 1B-parameter model; a larger instruct model
   might resolve the synthesis-time fabrication pattern directly rather
   than needing further prompt engineering.
+
+## Information Extractor
+
+### v1 - Baseline
+Model: gemini-3.5-flash-lite
+Fields: property_type (required), price/rooms/location/key_features/
+certifications (optional, extract only if explicit in text)
+
+Initial test across 3 varied descriptions (commercial retail, house
+with solar panels, 8-room office) surfaced one failure: property_type
+returned free-form values ("residential", "office space") instead of
+the required enum (apartment/house/commercial).
+
+Fix: tightened the property_type field description to require exactly
+one of three words, with explicit mapping examples (condo/flat/studio
+-> apartment; villa/cottage -> house; office/retail/warehouse ->
+commercial).
+
+Retest: all 3 cases returned correct enum values. Other fields
+(rooms, key_features, certifications) performed correctly on first
+attempt - rooms correctly totals bedroom+1 when only bedrooms stated,
+correctly omitted when no room info present, and correctly took an
+explicit total (8-room office) as-is.
+
+No further iteration needed at this stage - single targeted fix
+resolved the only identified failure mode.

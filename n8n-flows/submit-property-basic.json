@@ -36,7 +36,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -240,
+        -16,
         -176
       ],
       "id": "cb34ae8d-4545-4926-afb8-a5fed3dd298b",
@@ -49,7 +49,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        0,
+        -16,
         48
       ],
       "id": "fd8439b5-d180-4eff-a62f-c5c27f2a184b",
@@ -115,12 +115,12 @@
     },
     {
       "parameters": {
-        "text": "Open-plan office space on the 6th floor of a modern high-rise, suitable for a team of 20-30, with meeting rooms, a kitchenette, and 24/7 building access.",
+        "text": "Ground-floor retail unit on a busy high street, large storefront windows, storage room in the back, and existing HVAC system. Previously operated as a boutique clothing store.",
         "attributes": {
           "attributes": [
             {
               "name": "property_type",
-              "description": "The type Node 4 — Information Extractor (Prompt Engineering Surface) An n8n Information Extractor node backed by a Gemini LM node. Extracts structured fields: property type, location, price, number of rooms, key features, and any mentioned certifications. Students must design the attribute definitions and the system prompt template. This is a major prompt engineering task. Prompt Engineering Task — Node 4 Write the systemPromptTemplate for the Information Extractor. It must instruct the model to extract only facts present in the text, handle missing fields gracefully, and return consistent types. Iterate at least 5 times, documenting failures and improvements each time.ommercial.",
+              "description": "The type of property. Must be EXACTLY one of these three words:\napartment, house, or commercial. Map any variant to the closest match:\ncondo/flat/studio/penthouse -> apartment; villa/cottage/bungalow ->\nhouse; office/retail/store/warehouse/industrial -> commercial. Never\noutput any other word or phrase.",
               "required": true
             },
             {
@@ -152,8 +152,8 @@
       "type": "@n8n/n8n-nodes-langchain.informationExtractor",
       "typeVersion": 1.2,
       "position": [
-        256,
-        -224
+        -320,
+        -176
       ],
       "id": "c06a9fa3-bfc3-4f02-bdc8-da9dacb578ac",
       "name": "Information Extractor"
@@ -166,8 +166,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        256,
-        0
+        -320,
+        64
       ],
       "id": "2b734a5e-2e5c-4a72-9890-e528801b5284",
       "name": "Google Gemini Chat Model",
@@ -223,7 +223,7 @@
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "Information Extractor",
             "type": "main",
             "index": 0
           }
@@ -247,6 +247,17 @@
           }
         ]
       ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -255,7 +266,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "a9137aeb-515c-47d8-bd48-839c2d4b3976",
+  "versionId": "efa9a6ec-378e-4c7d-952f-3327e8133a3f",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "82d305bfe1c1b16935b3a127a027ea2a1d28d88f7ed1e5ee08a34a1f0bfac94d"
