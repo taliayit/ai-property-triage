@@ -1,5 +1,5 @@
 {
-  "name": "My workflow 4",
+  "name": "submit-property-basic",
   "nodes": [
     {
       "parameters": {
@@ -21,7 +21,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:8001/query",
+        "url": "http://rag-service:8001/query",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -58,7 +58,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:8002/check/input",
+        "url": "http://guardrails-service:8002/check/input",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -266,7 +266,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "efa9a6ec-378e-4c7d-952f-3327e8133a3f",
+  "versionId": "cb433e5a-f4fc-4275-b7d7-c06e572e317d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "82d305bfe1c1b16935b3a127a027ea2a1d28d88f7ed1e5ee08a34a1f0bfac94d"

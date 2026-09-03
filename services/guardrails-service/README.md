@@ -59,18 +59,28 @@ output) is meant to stay stable across that swap.
 Either endpoint always returns `200 OK` — a failed guardrail is a normal
 result, not a request error.
 
-## Setup
+## Run via docker compose (recommended)
+
+From the project root:
+
+```bash
+docker compose up -d --build
+```
+
+See the [root README](../../README.md) for the full stack (n8n +
+rag-service too). This service alone is reachable at
+`http://localhost:8002`, and from other compose services at
+`http://guardrails-service:8002`. It's stateless, so the
+[Dockerfile](Dockerfile) is a single stage - no compiled dependencies
+here, unlike rag-service's `llama-cpp-python`.
+
+## Run without Docker
 
 ```bash
 cd services/guardrails-service
 python -m venv venv
 venv\Scripts\activate      # Windows
 pip install -r requirements.txt
-```
-
-## Run the service
-
-```bash
 uvicorn main:app --reload --port 8002
 ```
 

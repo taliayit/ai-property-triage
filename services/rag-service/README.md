@@ -5,15 +5,6 @@ Finds similar property listings for a given free-text description
 uses a local LLM (via LangChain + llama-cpp-python) to write a short,
 citation-grounded insight comparing the submission to what it retrieved.
 
-## Setup (without Docker)
-
-```bash
-cd services/rag-service
-python -m venv venv
-venv\Scripts\activate      # Windows
-pip install -r requirements.txt
-```
-
 ### GGUF model
 
 Insight generation needs a local GGUF chat model. Place it at:
@@ -32,45 +23,48 @@ If the file isn't found at startup, `/query` returns `503` rather than
 crashing the service — the knowledge-base retrieval side doesn't need the
 LLM, only insight generation does.
 
-## Seed the knowledge base
+## Run via docker compose (recommended)
 
-Populates ChromaDB with 20 synthetic listings (apartments, houses,
-commercial). Only needs to be run once — data persists in `chroma_db/`.
-
-```bash
-python seed_data.py
-```
-
-## Run the service
+From the project root:
 
 ```bash
-uvicorn main:app --reload --port 8001
+docker compose up -d --build
 ```
 
-## Docker
+See the [root README](../../README.md) for the full stack (n8n +
+guardrails-service too). `rag-service` alone is reachable at
+`http://localhost:8001`, and from other compose services at
+`http://rag-service:8001`.
 
 The image needs a C/C++ toolchain to compile `llama-cpp-python`, which a
 slim runtime image doesn't carry — the [Dockerfile](Dockerfile) handles
 this with a multi-stage build: a `builder` stage with `build-essential` +
 `cmake` produces wheels, and the final `python:3.11-slim` stage only
 installs those prebuilt wheels, so the compiler toolchain never ends up in
-the shipped image. The synthetic listings are seeded **at build time**, so
-the container can serve `/query` immediately on start.
+the shipped image.
+
+The synthetic listings are seeded **at build time** into the image, and
+compose copies that seeded data into the `rag_chroma_data` named volume
+the first time it's created, so `/query` retrieval works immediately with
+no manual seed step. That copy only happens once, on an empty volume —
+if you change `seed_data.py` and rebuild, run
+`docker compose down -v && docker compose up -d --build` to force a
+fresh copy (this also drops any other data in that volume).
 
 The GGUF model is deliberately **not** baked into the image (it's hundreds
-of MB to several GB) — mount it at runtime instead:
+of MB to several GB) — `docker-compose.yml` mounts `models/` from the host
+read-only instead.
+
+## Run without Docker
 
 ```bash
-docker build -t rag-service .
-
-docker run -d -p 8001:8001 \
-  -v "$(pwd)/models:/app/models:ro" \
-  rag-service
+cd services/rag-service
+python -m venv venv
+venv\Scripts\activate      # Windows
+pip install -r requirements.txt
+python seed_data.py         # populates ChromaDB in chroma_db/, once
+uvicorn main:app --reload --port 8001
 ```
-
-`chroma_db/` lives inside the image from the build-time seed step; add a
-`-v $(pwd)/chroma_db:/app/chroma_db` mount if you want re-seeding to
-persist across container restarts.
 
 ## Test it
 

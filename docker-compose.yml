@@ -1,0 +1,48 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - property-triage
+    depends_on:
+      - rag-service
+      - guardrails-service
+
+  rag-service:
+    build: ./services/rag-service
+    container_name: rag-service
+    ports:
+      - "8001:8001"
+    volumes:
+      # GGUF model - not baked into the image, mounted read-only from host.
+      - ./services/rag-service/models:/app/models:ro
+      # Named volume: on first run, Docker copies the build-time-seeded
+      # /app/chroma_db from the image into this volume, then persists it
+      # across container restarts/recreations independent of image rebuilds.
+      - rag_chroma_data:/app/chroma_db
+    networks:
+      - property-triage
+
+  guardrails-service:
+    build: ./services/guardrails-service
+    container_name: guardrails-service
+    ports:
+      - "8002:8002"
+    networks:
+      - property-triage
+
+networks:
+  property-triage:
+    driver: bridge
+
+volumes:
+  # References the n8n_data volume your existing manual n8n container
+  # already uses, so its workflows/credentials carry over once you stop
+  # that container and switch to `docker compose up`.
+  n8n_data:
+    external: true
+  rag_chroma_data:
