@@ -4,3 +4,7 @@ __pycache__/
 chroma_db/
 models/
 CLAUDE.md
+services/image-analyser/data/raw/
+services/image-analyser/data/processed/train/
+services/image-analyser/data/processed/val/
+services/image-analyser/data/processed/test/
