@@ -2,7 +2,7 @@ venv/
 __pycache__/
 *.pyc
 chroma_db/
-models/
+services/rag-service/models/
 CLAUDE.md
 services/image-analyser/data/raw/
 services/image-analyser/data/processed/train/
