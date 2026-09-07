@@ -9,7 +9,7 @@ See `CLAUDE.md` for the full project context and architecture.
 docker compose up -d --build
 ```
 
-This builds and starts all three services on a shared `property-triage`
+This builds and starts all four services on a shared `property-triage`
 network:
 
 | Service               | Container name       | Host port | Compose network address                |
@@ -17,10 +17,11 @@ network:
 | n8n                    | `n8n`                | 5678      | `http://n8n:5678`                         |
 | RAG service            | `rag-service`         | 8001      | `http://rag-service:8001`                 |
 | Guardrails service     | `guardrails-service`  | 8002      | `http://guardrails-service:8002`          |
+| Image Analyser         | `image-analyser`      | 8003      | `http://image-analyser:8003`              |
 
-n8n's workflow HTTP Request nodes should call the other two services by
+n8n's workflow HTTP Request nodes should call the other services by
 their **compose network address** above (e.g.
-`http://rag-service:8001/query`), not `host.docker.internal` — all three
+`http://rag-service:8001/query`), not `host.docker.internal` — all
 containers share one Docker network and can reach each other by service
 name.
 
@@ -48,12 +49,15 @@ model is added.
   first time the volume is created; see
   [services/rag-service/README.md](services/rag-service/README.md) for
   how to force a re-seed after changing `seed_data.py`.
-- `guardrails-service` is stateless - no volume needed.
+- `guardrails-service` and `image-analyser` are both stateless - no
+  volume needed for either. `image-analyser`'s trained checkpoint is
+  baked into its image at build time (see its README), not mounted.
 
 ## Per-service docs
 
 - [services/rag-service/README.md](services/rag-service/README.md)
 - [services/guardrails-service/README.md](services/guardrails-service/README.md)
+- [services/image-analyser/README.md](services/image-analyser/README.md)
 - [docs/prompt-engineering-log.md](docs/prompt-engineering-log.md) - RAG
   insight-generation prompt iteration history and evaluation results.
 

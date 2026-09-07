@@ -11,6 +11,7 @@ services:
     depends_on:
       - rag-service
       - guardrails-service
+      - image-analyser
 
   rag-service:
     build: ./services/rag-service
@@ -32,6 +33,14 @@ services:
     container_name: guardrails-service
     ports:
       - "8002:8002"
+    networks:
+      - property-triage
+
+  image-analyser:
+    build: ./services/image-analyser
+    container_name: image-analyser
+    ports:
+      - "8003:8003"
     networks:
       - property-triage
 
