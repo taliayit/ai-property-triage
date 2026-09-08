@@ -9,7 +9,7 @@ See `CLAUDE.md` for the full project context and architecture.
 docker compose up -d --build
 ```
 
-This builds and starts all four services on a shared `property-triage`
+This builds and starts all five services on a shared `property-triage`
 network:
 
 | Service               | Container name       | Host port | Compose network address                |
@@ -18,6 +18,7 @@ network:
 | RAG service            | `rag-service`         | 8001      | `http://rag-service:8001`                 |
 | Guardrails service     | `guardrails-service`  | 8002      | `http://guardrails-service:8002`          |
 | Image Analyser         | `image-analyser`      | 8003      | `http://image-analyser:8003`              |
+| LangGraph Agent        | `langgraph-agent`     | 8004      | `http://langgraph-agent:8004`             |
 
 n8n's workflow HTTP Request nodes should call the other services by
 their **compose network address** above (e.g.
@@ -39,6 +40,16 @@ without the file present, `rag-service` still starts and serves
 retrieval, but `/query`'s insight generation returns `503` until the
 model is added.
 
+`langgraph-agent` needs a Gemini API key. Create a `.env` file in the
+project root (gitignored - never commit it) containing:
+
+```
+GEMINI_API_KEY=your-key-here
+```
+
+`docker-compose.yml` reads it automatically. Without it, `langgraph-agent`
+still starts, but `/agent/run` returns `503`.
+
 ## Data persistence
 
 - `n8n` uses the `n8n_data` Docker volume - the same one your existing
@@ -49,15 +60,17 @@ model is added.
   first time the volume is created; see
   [services/rag-service/README.md](services/rag-service/README.md) for
   how to force a re-seed after changing `seed_data.py`.
-- `guardrails-service` and `image-analyser` are both stateless - no
-  volume needed for either. `image-analyser`'s trained checkpoint is
-  baked into its image at build time (see its README), not mounted.
+- `guardrails-service`, `image-analyser`, and `langgraph-agent` are all
+  stateless - no volume needed for any of them. `image-analyser`'s
+  trained checkpoint is baked into its image at build time (see its
+  README), not mounted.
 
 ## Per-service docs
 
 - [services/rag-service/README.md](services/rag-service/README.md)
 - [services/guardrails-service/README.md](services/guardrails-service/README.md)
 - [services/image-analyser/README.md](services/image-analyser/README.md)
+- [services/langgraph-agent/README.md](services/langgraph-agent/README.md)
 - [docs/prompt-engineering-log.md](docs/prompt-engineering-log.md) - RAG
   insight-generation prompt iteration history and evaluation results.
 

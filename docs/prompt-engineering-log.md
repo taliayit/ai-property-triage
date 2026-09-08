@@ -374,3 +374,50 @@ explicit total (8-room office) as-is.
 
 No further iteration needed at this stage - single targeted fix
 resolved the only identified failure mode.
+
+## LangGraph Agent Tool Selection
+
+### v1 - Baseline
+Model: gemini-3.5-flash-lite, via the planner node's native
+function-calling (`bind_tools` - see `services/langgraph-agent/graph.py`).
+
+Tools offered: `search_similar_listings` (rag-service, text-only
+property comparison) and `analyse_room_photo` (image-analyser, single
+photo room type + condition). Full tool descriptions - the actual prompt
+surface being tested - are in `services/langgraph-agent/tools.py`.
+
+8 test queries: the spec's two named examples, plus rag-only, image-only,
+both-tools, no-tools-needed, and two cases designed to tempt the wrong
+tool.
+
+| # | Query (abridged) | Expected | Tools called | Correct? |
+|---|---|---|---|---|
+| 1 | Photo of a bathroom - what's needed to reach condition 5? (spec example) | image only | `analyse_room_photo` | Yes |
+| 2 | 3 photos - which room needs the most attention? (spec example) | image x3 | `analyse_room_photo` x3 | Yes |
+| 3 | 3BR apartment, renovated kitchen, $300k - how does it compare? | rag only | `search_similar_listings` | Yes |
+| 4 | Is $850k reasonable for a 5BR house with solar panels? | rag only | `search_similar_listings` | Yes |
+| 5 | Listing description + kitchen photo - compare it AND assess the kitchen | both | `search_similar_listings`, `analyse_room_photo` | Yes |
+| 6 | 3 tips for staging a living room before an open house | none | *(none)* | Yes |
+| 7 | "Tell me about this property." (no description, no photo) | none | *(none)*, asked for clarification | Yes |
+| 8 | Photo of a living room - better or worse than average condition? | image only | `analyse_room_photo` | Yes |
+
+Result: 8/8 correct.
+
+Query 8's phrasing ("better or worse than *average*") reads like a
+market-comparison question, which could plausibly trigger
+`search_similar_listings` - but that tool has no condition-score data to
+offer, and the planner called only `analyse_room_photo`.
+
+Query 7 has no description or photo. The planner called no tools; the
+synthesiser asked the user for more detail rather than calling
+`search_similar_listings` with an empty/junk description.
+
+Queries 1 and 8 hit images the trained classifier (image-analyser)
+reports `"uncertain"` for (confidence below its 0.4 threshold - see its
+own README). Tool selection was correct in both cases regardless; the
+synthesiser reported the uncertainty rather than fabricating a condition
+score. This is image-analyser's own known limitation surfacing through
+the pipeline, not a tool-selection failure.
+
+No iteration needed - 8/8 on the first test pass. A genuine misselection
+surfacing in real usage would be the v2 entry for this surface.

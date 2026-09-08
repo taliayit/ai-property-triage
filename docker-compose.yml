@@ -12,6 +12,7 @@ services:
       - rag-service
       - guardrails-service
       - image-analyser
+      - langgraph-agent
 
   rag-service:
     build: ./services/rag-service
@@ -41,6 +42,20 @@ services:
     container_name: image-analyser
     ports:
       - "8003:8003"
+    networks:
+      - property-triage
+
+  langgraph-agent:
+    build: ./services/langgraph-agent
+    container_name: langgraph-agent
+    ports:
+      - "8004:8004"
+    environment:
+      # Reads from the shell environment or a .env file in the project
+      # root (docker compose loads .env automatically) - never hardcode
+      # the key here. Without it, the service starts but /agent/run
+      # returns 503.
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     networks:
       - property-triage
 
