@@ -11,7 +11,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -896,
+        -1248,
         -160
       ],
       "id": "50e3c9af-e621-4354-ac31-6bb96243241c",
@@ -20,37 +20,13 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://rag-service:8001/query",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "description",
-              "value": "={{ $node[\"Webhook\"].json.body.description }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        -16,
-        -176
-      ],
-      "id": "cb34ae8d-4545-4926-afb8-a5fed3dd298b",
-      "name": "HTTP Request"
-    },
-    {
-      "parameters": {
         "options": {}
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -16,
-        48
+        0,
+        -80
       ],
       "id": "fd8439b5-d180-4eff-a62f-c5c27f2a184b",
       "name": "Respond to Webhook"
@@ -73,7 +49,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -688,
+        -1040,
         -160
       ],
       "id": "18bf3d15-de64-450d-bfdb-5d648e2bf696",
@@ -107,7 +83,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -512,
+        -864,
         -160
       ],
       "id": "ff05ef4a-a6df-495a-b8ef-60b0e5edad7e",
@@ -152,7 +128,7 @@
       "type": "@n8n/n8n-nodes-langchain.informationExtractor",
       "typeVersion": 1.2,
       "position": [
-        -320,
+        -672,
         -176
       ],
       "id": "c06a9fa3-bfc3-4f02-bdc8-da9dacb578ac",
@@ -166,8 +142,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        -320,
-        64
+        -672,
+        48
       ],
       "id": "2b734a5e-2e5c-4a72-9890-e528801b5284",
       "name": "Google Gemini Chat Model",
@@ -177,6 +153,98 @@
           "name": "Google Gemini(PaLM) Api account"
         }
       }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json) }}. Photos to analyze: {{ $node[\"Webhook\"].json.body.image_urls?.join(', ') || 'none provided' }}",
+        "options": {
+          "systemMessage": "You are a senior property analyst working for a real estate agency. You receive structured property data (extracted from a listing submission) and must produce a useful analysis for the agent handling this listing.\n\nYou have three tools available:\n- search_similar_listings: for market comparison questions (text-based)\n- analyse_room_photo: for single-photo room condition/type questions\n- complex_property_reasoning: for multi-step questions combining several sources\n\nCall only the tools genuinely needed - not every listing needs every tool. Use analyse_room_photo once per photo if multiple images are provided.\n\nReturn your final answer as a JSON object with this exact structure:\n{\n  \"summary\": \"<2-3 sentence overview of the property>\",\n  \"market_comparison\": \"<insight from search_similar_listings, or null if not used>\",\n  \"photo_analysis\": [{\"image_url\": \"...\", \"room_type\": \"...\", \"condition_score\": N}],\n  \"recommendations\": \"<any renovation/pricing recommendations, or null>\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -368,
+        -176
+      ],
+      "id": "2a8a4c9d-86eb-4739-9116-2223ed8561d0",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        48
+      ],
+      "id": "8ad71083-c3ee-4b4e-afe7-6619dd43a52e",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ZXH6hKAZCGAfJeC4",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Find similar property listings and get an AI-written comparison insight, given a text description of a property (features, price, room count, location). Use this for questions about how a property compares to similar listings, whether an asking price seems reasonable, or what comparable properties look like. Does NOT look at photos or judge room condition.",
+        "method": "POST",
+        "url": "http://rag-service:8001/query",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"description\": \"{{ $fromAI('description', 'Property description to search for') }}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        -224,
+        48
+      ],
+      "id": "74e89b02-4084-49f9-996b-08f92a4877e4",
+      "name": "search_similar_listings"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Classify a single room photo by room type and assess its physical condition on a 1-5 scale, given a direct URL to one image. Use this for questions about what a specific photo shows, or about a room's condition/renovation state. Does NOT compare properties or read text. Call once per photo for multi-photo questions.",
+        "method": "POST",
+        "url": "http://image-analyser:8003/analyse",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"image_url\": \"{{ $fromAI('image_url', 'URL of the room photo to analyse') }}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        -128,
+        128
+      ],
+      "id": "50f40648-a672-46ee-b348-000228b68b0f",
+      "name": "analyse_room_photo"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Answer complex, multi-step questions about a property that require combining information from multiple sources (e.g. renovation recommendations, comparing condition across several rooms). Use this only for questions too complex for a single lookup - not for simple comparisons or single-photo analysis.",
+        "url": "http://langgraph-agent:8004/agent/run",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"query\": \"{{ $fromAI('query', 'The complex question to answer') }}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        -32,
+        224
+      ],
+      "id": "615edbf3-aa5e-47ba-93ad-57ed0c2a06ba",
+      "name": "complex_property_reasoning"
     }
   ],
   "pinData": {},
@@ -186,17 +254,6 @@
         [
           {
             "node": "HTTP Request2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request": {
-      "main": [
-        [
-          {
-            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }
@@ -252,8 +309,63 @@
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "AI Agent",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_similar_listings": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "analyse_room_photo": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "complex_property_reasoning": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
             "index": 0
           }
         ]
@@ -266,7 +378,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "cb433e5a-f4fc-4275-b7d7-c06e572e317d",
+  "versionId": "913c593b-4e9f-4834-bcd9-9d215691f112",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "82d305bfe1c1b16935b3a127a027ea2a1d28d88f7ed1e5ee08a34a1f0bfac94d"

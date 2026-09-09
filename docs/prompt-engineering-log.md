@@ -421,3 +421,25 @@ the pipeline, not a tool-selection failure.
 
 No iteration needed - 8/8 on the first test pass. A genuine misselection
 surfacing in real usage would be the v2 entry for this surface.
+
+## Node 5 (AI Agent) System Prompt
+
+### v1 - Baseline
+Role: senior property analyst. 3 tools defined (rag/image/langgraph).
+JSON output format: summary, market_comparison, photo_analysis, recommendations.
+
+The AI Agent's prompt combines the Information Extractor's 
+output with image_urls from the Webhook node's payload.
+
+Test 1 (commercial listing, no photo): correct tool selection
+(search_similar_listings only), valid JSON, photo_analysis correctly null.
+
+Test 2 (same listing + image_urls via webhook): correct tool selection
+for both tools, photo_analysis populated correctly, JSON structure held.
+
+Known issue (not a Node 5 failure): rag-service's insight fabricated a
+comparison price not present in any retrieved listing - already
+documented in rag-service's own log (58% pass rate). Surfaces here but
+isn't specific to this surface.
+
+No further iteration needed at this baseline - core mechanics solid.
