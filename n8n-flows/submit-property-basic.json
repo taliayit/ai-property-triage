@@ -11,8 +11,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1248,
-        -160
+        -1728,
+        -272
       ],
       "id": "50e3c9af-e621-4354-ac31-6bb96243241c",
       "name": "Webhook",
@@ -25,8 +25,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        0,
-        -80
+        144,
+        -240
       ],
       "id": "fd8439b5-d180-4eff-a62f-c5c27f2a184b",
       "name": "Respond to Webhook"
@@ -49,8 +49,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1040,
-        -160
+        -1520,
+        -272
       ],
       "id": "18bf3d15-de64-450d-bfdb-5d648e2bf696",
       "name": "HTTP Request2"
@@ -83,8 +83,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -864,
-        -160
+        -1344,
+        -272
       ],
       "id": "ff05ef4a-a6df-495a-b8ef-60b0e5edad7e",
       "name": "If"
@@ -128,8 +128,8 @@
       "type": "@n8n/n8n-nodes-langchain.informationExtractor",
       "typeVersion": 1.2,
       "position": [
-        -672,
-        -176
+        -1152,
+        -288
       ],
       "id": "c06a9fa3-bfc3-4f02-bdc8-da9dacb578ac",
       "name": "Information Extractor"
@@ -142,8 +142,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        -672,
-        48
+        -1152,
+        -64
       ],
       "id": "2b734a5e-2e5c-4a72-9890-e528801b5284",
       "name": "Google Gemini Chat Model",
@@ -165,21 +165,22 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -368,
-        -176
+        -848,
+        -288
       ],
       "id": "2a8a4c9d-86eb-4739-9116-2223ed8561d0",
       "name": "AI Agent"
     },
     {
       "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        -368,
-        48
+        -848,
+        -64
       ],
       "id": "8ad71083-c3ee-4b4e-afe7-6619dd43a52e",
       "name": "Google Gemini Chat Model1",
@@ -203,8 +204,8 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
       "position": [
-        -224,
-        48
+        -704,
+        -64
       ],
       "id": "74e89b02-4084-49f9-996b-08f92a4877e4",
       "name": "search_similar_listings"
@@ -222,8 +223,8 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
       "position": [
-        -128,
-        128
+        -624,
+        16
       ],
       "id": "50f40648-a672-46ee-b348-000228b68b0f",
       "name": "analyse_room_photo"
@@ -240,11 +241,97 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
       "position": [
-        -32,
-        224
+        -512,
+        112
       ],
       "id": "615edbf3-aa5e-47ba-93ad-57ed0c2a06ba",
       "name": "complex_property_reasoning"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You write publishable property listing briefs for a real estate agency, based on structured analysis already prepared by another agent.\n\nYou will receive a JSON object with: summary, market_comparison, photo_analysis (may be null or an array), and recommendations.\n\nWrite a clear, well-organized Markdown document combining this information into a brief a client could read directly. Use headings for each section. If a field is null or empty, omit that section entirely - do not invent content to fill it in.\n\nReturn your output as JSON: {\"title\": \"<short listing title>\", \"brief_markdown\": \"<the full markdown document>\"}\n\nReturn ONLY the JSON object matching the schema, with no markdown code fences, no extra wrapper keys, and no explanatory text before or after it."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -448,
+        -288
+      ],
+      "id": "355ce006-6dd3-45e3-bd40-969959d68ca9",
+      "name": "Basic LLM Chain",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {
+          "maxOutputTokens": 4096
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        -64
+      ],
+      "id": "6f5f6af3-8b2d-4ab6-987a-8f46351522ea",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ZXH6hKAZCGAfJeC4",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"title\": {\"type\": \"string\", \"description\": \"A short listing title\"},\n    \"brief_markdown\": {\"type\": \"string\", \"description\": \"The full Markdown-formatted listing brief\"}\n  },\n  \"required\": [\"title\", \"brief_markdown\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        -80
+      ],
+      "id": "06d078df-26fe-47dc-824f-b7fcbd6895ac",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nlet raw = item.text || item.output || item;\nif (typeof raw === 'string') {\n  raw = raw.replace(/```json\\s*/gi, '').replace(/```\\s*/g, '').trim();\n}\nlet parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;\nconst result = parsed.output || parsed;\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        -144
+      ],
+      "id": "c91c1a79-ef5f-4e99-bfce-9ecbcd9db6d3",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nlet raw = item.output ?? item.text ?? item;\nif (typeof raw === 'string') {\n  raw = raw.replace(/```json\\s*/gi, '').replace(/```\\s*/g, '').trim();\n  raw = JSON.parse(raw);\n}\nconst result = raw.output ?? raw; // unwrap if double-wrapped\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        -320
+      ],
+      "id": "2f6a00e9-379e-4b55-9ecf-2210ed362a90",
+      "name": "Code in JavaScript1"
     }
   ],
   "pinData": {},
@@ -331,7 +418,7 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Basic LLM Chain",
             "type": "main",
             "index": 0
           }
@@ -370,6 +457,57 @@
           }
         ]
       ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -378,7 +516,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "913c593b-4e9f-4834-bcd9-9d215691f112",
+  "versionId": "508f56c4-8b6b-4810-bc2f-585da1375c53",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "82d305bfe1c1b16935b3a127a027ea2a1d28d88f7ed1e5ee08a34a1f0bfac94d"
