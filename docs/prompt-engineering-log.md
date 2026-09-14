@@ -449,27 +449,22 @@ No further iteration needed at this baseline - core mechanics solid.
 ### v1 - Baseline
 System Message defines role (property brief writer), explicit input
 shape (summary/market_comparison/photo_analysis/recommendations from
-Node 5), required JSON output structure (title/brief_markdown) with an
-example response as a template, and an explicit instruction against
-extra wrapper keys or code fences.
+Node 5), and required JSON output structure ({"brief_markdown": "..."})
+with an example response as a template and an explicit instruction
+against extra wrapper keys or code fences.
 
-Structured Output Parser configured with schema: title (string),
-brief_markdown (string), both required.
+Structured Output Parser configured with schema: brief_markdown
+(string), required.
 
 Known Gemini inconsistency: output format varies between runs even with
-identical prompts and schema - sometimes returns {"title",
-"brief_markdown"} directly, sometimes wraps it as {"output": {...}}, and
-section coverage in brief_markdown isn't always identical. A Code node
-receiving both the LLM Chain's success and error outputs normalizes this
-- unwraps an "output" key if present, strips markdown code fences, and
-parses the JSON - so Respond to Webhook always receives the same clean
-{title, brief_markdown} shape regardless of which format Gemini chose
-that run.
+identical prompts and schema - sometimes returns {"brief_markdown": ...}
+directly, sometimes wraps it in an "output" key, and section coverage
+isn't always identical. A Code node normalizes this after generation, so
+downstream nodes always receive the same clean {"brief_markdown": ...}
+shape.
 
 Verified across multiple runs: valid Markdown brief generated each time,
 integrating all available Node 5 fields into a coherent document, no
-fabricated content, consistent title/brief_markdown structure after
-normalization.
+fabricated content.
 
-No further iteration planned - the safety-net design handles Gemini's
-inherent output variability without needing further prompt tuning.
+No further iteration planned.
