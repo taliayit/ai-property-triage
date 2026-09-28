@@ -11,8 +11,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -2016,
-        -288
+        -2400,
+        -448
       ],
       "id": "50e3c9af-e621-4354-ac31-6bb96243241c",
       "name": "Webhook",
@@ -27,8 +27,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        288,
-        -272
+        176,
+        -320
       ],
       "id": "fd8439b5-d180-4eff-a62f-c5c27f2a184b",
       "name": "Respond to Webhook"
@@ -51,8 +51,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1808,
-        -288
+        -2192,
+        -448
       ],
       "id": "18bf3d15-de64-450d-bfdb-5d648e2bf696",
       "name": "HTTP Request2"
@@ -85,20 +85,20 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1632,
-        -288
+        -2016,
+        -448
       ],
       "id": "ff05ef4a-a6df-495a-b8ef-60b0e5edad7e",
       "name": "If"
     },
     {
       "parameters": {
-        "text": "Ground-floor retail unit on a busy high street, large storefront windows, storage room in the back, and existing HVAC system. Previously operated as a boutique clothing store.",
+        "text": "={{ $('Webhook').first().json.body.description }}",
         "attributes": {
           "attributes": [
             {
               "name": "property_type",
-              "description": "The type of property. Must be EXACTLY one of these three words:\napartment, house, or commercial. Map any variant to the closest match:\ncondo/flat/studio/penthouse -> apartment; villa/cottage/bungalow ->\nhouse; office/retail/store/warehouse/industrial -> commercial. Never\noutput any other word or phrase.",
+              "description": "The type of property. \nMust be EXACTLY one of these six words: apartment, house, villa, office, retail, or industrial. \nMap based on the property's actual use: \napartment = multi-unit residential building; \nhouse = standalone single-family home;\nvilla = luxury/large standalone home; \noffice = office space; \nretail = storefront/shop; \nindustrial = warehouse/factory/industrial-use property.\n",
               "required": true
             },
             {
@@ -130,8 +130,8 @@
       "type": "@n8n/n8n-nodes-langchain.informationExtractor",
       "typeVersion": 1.2,
       "position": [
-        -1440,
-        -352
+        -1824,
+        -464
       ],
       "id": "c06a9fa3-bfc3-4f02-bdc8-da9dacb578ac",
       "name": "Information Extractor"
@@ -144,8 +144,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        -1440,
-        -112
+        -1824,
+        -224
       ],
       "id": "2b734a5e-2e5c-4a72-9890-e528801b5284",
       "name": "Google Gemini Chat Model",
@@ -167,8 +167,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -1136,
-        -352
+        -1472,
+        -464
       ],
       "id": "2a8a4c9d-86eb-4739-9116-2223ed8561d0",
       "name": "AI Agent"
@@ -181,8 +181,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        -1136,
-        -112
+        -1472,
+        -224
       ],
       "id": "8ad71083-c3ee-4b4e-afe7-6619dd43a52e",
       "name": "Google Gemini Chat Model1",
@@ -206,8 +206,8 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
       "position": [
-        -992,
-        -112
+        -1328,
+        -224
       ],
       "id": "74e89b02-4084-49f9-996b-08f92a4877e4",
       "name": "search_similar_listings"
@@ -225,8 +225,8 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
       "position": [
-        -912,
-        0
+        -1248,
+        -112
       ],
       "id": "50f40648-a672-46ee-b348-000228b68b0f",
       "name": "analyse_room_photo"
@@ -243,8 +243,8 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
       "position": [
-        -800,
-        96
+        -1136,
+        -16
       ],
       "id": "615edbf3-aa5e-47ba-93ad-57ed0c2a06ba",
       "name": "complex_property_reasoning"
@@ -266,8 +266,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        -736,
-        -352
+        -1072,
+        -464
       ],
       "id": "355ce006-6dd3-45e3-bd40-969959d68ca9",
       "name": "Basic LLM Chain",
@@ -283,8 +283,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        -736,
-        -96
+        -1072,
+        -208
       ],
       "id": "6f5f6af3-8b2d-4ab6-987a-8f46351522ea",
       "name": "Google Gemini Chat Model2",
@@ -303,8 +303,8 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        -592,
-        -96
+        -928,
+        -208
       ],
       "id": "06d078df-26fe-47dc-824f-b7fcbd6895ac",
       "name": "Structured Output Parser"
@@ -327,8 +327,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -144,
-        -368
+        -496,
+        -480
       ],
       "id": "7070154f-5609-4a30-b099-26170c42d7fb",
       "name": "HTTP Request"
@@ -361,8 +361,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        32,
-        -368
+        -320,
+        -480
       ],
       "id": "bd82e997-0107-4136-8c23-ea104f732f0c",
       "name": "If1"
@@ -376,8 +376,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        288,
-        -96
+        176,
+        -144
       ],
       "id": "acea6b77-a79e-4c1f-ab97-746b8915528f",
       "name": "Respond to Webhook1"
@@ -389,11 +389,108 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -352,
-        -368
+        -688,
+        -480
       ],
       "id": "2f6a00e9-379e-4b55-9ecf-2210ed362a90",
       "name": "Code"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Information Extractor').first().json.output.property_type }}",
+                    "rightValue": "={{ \"^(apartment|house|villa)$\" }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "630f20df-d5ac-4d94-af11-5f626f2f3715"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "residential"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8cd4698c-e8e7-4dd0-8e06-cbe39dfec27a",
+                    "leftValue": "={{ $('Information Extractor').first().json.output.property_type }}",
+                    "rightValue": "={{ \"^(office|retail|industrial)$\" }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "commercial"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -48,
+        -608
+      ],
+      "id": "7a243639-06d7-4f8b-9d5e-688106736f36",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { brief_markdown: $json.safe_text, routed_to: \"residential\" } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        176,
+        -704
+      ],
+      "id": "febe13e6-28c4-4284-be7f-e11163c5e009",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { brief_markdown: $json.safe_text, routed_to: \"commercial\" } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        176,
+        -512
+      ],
+      "id": "1d999856-d5bc-4274-b20a-2ecc1981e19e",
+      "name": "Respond to Webhook3"
     }
   ],
   "pinData": {},
@@ -575,7 +672,7 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Switch",
             "type": "main",
             "index": 0
           }
@@ -599,6 +696,24 @@
           }
         ]
       ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -607,7 +722,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "e6499b79-9adb-48d0-b3ff-0bc000f2450c",
+  "versionId": "24481b83-e992-478e-9180-5ae9ec2ae604",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "82d305bfe1c1b16935b3a127a027ea2a1d28d88f7ed1e5ee08a34a1f0bfac94d"
