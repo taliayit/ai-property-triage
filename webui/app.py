@@ -72,21 +72,49 @@ def submit_property(description: str, image_urls_raw: str, agent_name: str) -> s
     )
 
 
-with gr.Blocks(title="Property Triage") as demo:
+def start_submission():
+    return (
+        gr.update(value="Submitting...", interactive=False),
+        gr.update(value="⏳ Submitting your listing - this can take a few minutes...", visible=True),
+    )
+
+
+def end_submission():
+    return (
+        gr.update(value="Submit", interactive=True),
+        gr.update(visible=False),
+    )
+
+custom_css = """
+.gradio-container {
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+}
+"""
+
+with gr.Blocks(title="Property Triage", css=custom_css) as demo:
     with gr.Tab("Conversational Assistant"):
         gr.ChatInterface(fn=chat_fn)
 
     with gr.Tab("Listing Submission"):
         description = gr.Textbox(label="Listing description", lines=6)
-        image_urls = gr.Textbox(label="Image URLs (comma-separated)")
+        image_urls = gr.Textbox(label="Image URLs (comma-separated)", lines=2)
         agent_name = gr.Textbox(label="Listing agent name")
         submit_btn = gr.Button("Submit", variant="primary")
+        status = gr.Markdown(visible=False)
         output = gr.Markdown(label="Report")
 
         submit_btn.click(
+            fn=start_submission,
+            outputs=[submit_btn, status],
+        ).then(
             fn=submit_property,
             inputs=[description, image_urls, agent_name],
             outputs=output,
+        ).then(
+            fn=end_submission,
+            outputs=[submit_btn, status],
         )
 
 if __name__ == "__main__":
