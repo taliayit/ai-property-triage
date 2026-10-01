@@ -1,0 +1,4 @@
+models:
+  - type: main
+    engine: gemini_shim
+    model: gemini-3.5-flash-lite

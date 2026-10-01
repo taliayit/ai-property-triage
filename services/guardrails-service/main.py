@@ -1,15 +1,19 @@
-"""Guardrails Service - deterministic structural checks.
+"""Guardrails Service - deterministic pre-filter, then NeMo Guardrails.
 
-POST /check/input validates submission text (length, format, spam
-patterns). POST /check/output is a placeholder that stands in for a real
-NeMo output-audit until an LLM Chain is generating reports - it only
-flags a fixed list of absolute-claim phrases. Semantic judgment (language,
-offensive content, on-topic relevance, real fabrication detection) is out
-of scope for rule-based logic and is deferred to a future NeMo Guardrails
-integration - see README.
+Deterministic checks (empty/malformed, spam formatting) run first and
+short-circuit before any LLM call - see README for why this pre-filter
+(not itself a spec requirement) is kept as a deliberate design choice.
+
+Semantic judgment runs via two NeMo Guardrails rails, both backed by
+Gemini: topic detection (genuine, on-topic, English-language input /
+coherent, on-topic output) and policy enforcement (offensive content on
+input; false legal claims, invented prices, fabricated certifications on
+output). See nemo_rails.py and docs/prompt-engineering-log.md.
 """
 
+import logging
 import re
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -18,16 +22,28 @@ from config import (
     MAX_REPEATED_CHAR_RUN,
     MIN_ALPHA_RATIO,
     MIN_TEXT_LENGTH,
-    OUTPUT_RISK_PHRASES,
     SPAM_CAPS_MIN_LENGTH,
     SPAM_MAX_CAPS_RATIO,
     SPAM_MAX_EXCLAMATIONS,
 )
+from nemo_rails import build_rails, check_input_rails, check_output_rails
+
+logger = logging.getLogger(__name__)
 
 URL_PATTERN = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
 REPEATED_CHAR_PATTERN = re.compile(r"(.)\1{" + str(MAX_REPEATED_CHAR_RUN - 1) + ",}")
 
-app = FastAPI(title="Guardrails Service")
+rails = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global rails
+    rails = build_rails()
+    yield
+
+
+app = FastAPI(title="Guardrails Service", lifespan=lifespan)
 
 
 class CheckRequest(BaseModel):
@@ -90,23 +106,19 @@ def check_spam(text: str) -> dict:
     return make_check(True, "no spam signals detected")
 
 
-def check_output_risk_language(text: str) -> dict:
-    lowered = text.lower()
-    matched = [phrase for phrase in OUTPUT_RISK_PHRASES if phrase in lowered]
-    if matched:
-        return make_check(False, f"contains unverifiable absolute claim(s): {', '.join(matched)}")
-    return make_check(True, "no risk language detected")
-
-
 @app.post("/check/input")
-def check_input(request: CheckRequest):
+async def check_input(request: CheckRequest):
     passed, reason = aggregate(
         [check_not_empty_or_malformed(request.text), check_spam(request.text)]
     )
-    return {"pass": passed, "reason": reason}
+    if not passed:
+        return {"pass": False, "reason": reason}
+
+    nemo_passed, nemo_reason = await check_input_rails(rails, request.text)
+    return {"pass": nemo_passed, "reason": nemo_reason}
 
 
 @app.post("/check/output")
-def check_output(request: CheckRequest):
-    passed, reason = aggregate([check_output_risk_language(request.text)])
-    return {"pass": passed, "reason": reason, "safe_text": request.text}
+async def check_output(request: CheckRequest):
+    nemo_passed, nemo_reason = await check_output_rails(rails, request.text)
+    return {"pass": nemo_passed, "reason": nemo_reason, "safe_text": request.text}

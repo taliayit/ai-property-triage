@@ -1,3 +1,8 @@
 fastapi
 uvicorn[standard]
 pydantic
+nemoguardrails
+langchain
+langchain-core
+langchain-community
+langchain-google-genai
