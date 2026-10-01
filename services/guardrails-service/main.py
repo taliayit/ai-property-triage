@@ -15,10 +15,11 @@ import logging
 import re
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from config import (
+    GEMINI_API_KEY,
     MAX_REPEATED_CHAR_RUN,
     MIN_ALPHA_RATIO,
     MIN_TEXT_LENGTH,
@@ -39,7 +40,10 @@ rails = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global rails
-    rails = build_rails()
+    if GEMINI_API_KEY:
+        rails = build_rails()
+    else:
+        logger.warning("GEMINI_API_KEY is not set. Set it before calling /check/input or /check/output.")
     yield
 
 
@@ -114,11 +118,17 @@ async def check_input(request: CheckRequest):
     if not passed:
         return {"pass": False, "reason": reason}
 
+    if rails is None:
+        raise HTTPException(status_code=503, detail="GEMINI_API_KEY is not set on this service.")
+
     nemo_passed, nemo_reason = await check_input_rails(rails, request.text)
     return {"pass": nemo_passed, "reason": nemo_reason}
 
 
 @app.post("/check/output")
 async def check_output(request: CheckRequest):
+    if rails is None:
+        raise HTTPException(status_code=503, detail="GEMINI_API_KEY is not set on this service.")
+
     nemo_passed, nemo_reason = await check_output_rails(rails, request.text)
     return {"pass": nemo_passed, "reason": nemo_reason, "safe_text": request.text}
