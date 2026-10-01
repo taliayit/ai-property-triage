@@ -13,8 +13,9 @@ Gemini, instead of fixed phrase lists.
 
 Both accept `{"text": "<text to check>"}` and return
 `{"pass": bool, "reason": str | null}` (`/check/output` also echoes
-`safe_text`). Either endpoint always returns `200 OK` — a failed
-guardrail is a normal result, not a request error.
+`safe_text`). A failed guardrail is a normal `200 OK` result, not a
+request error. `503` if `GEMINI_API_KEY` isn't set - the service still
+starts rather than crashing.
 
 ## Architecture: deterministic pre-filter, then two NeMo rails
 
@@ -87,6 +88,23 @@ direct-call pattern, with no Colang expression evaluation involved.
   OpenAI convention NeMo always passes) to `max_output_tokens`, which is
   what this Gemini integration actually accepts.
 
+## Run via docker compose (recommended)
+
+From the project root:
+
+```bash
+docker compose up -d --build
+```
+
+See the [root README](../../README.md) for the full stack. This service
+alone is reachable at `http://localhost:8002`, and from other compose
+services at `http://guardrails-service:8002`. `GEMINI_API_KEY` is read
+from the shell environment or a `.env` file in the project root (compose
+loads it automatically) via `docker-compose.yml` - never hardcoded into
+the image. `nemoguardrails` 0.24.1 (the version this pulls in) has no
+`annoy` dependency, so unlike rag-service's `llama-cpp-python`, this
+image is a single stage with no compiler toolchain needed.
+
 ## Run without Docker
 
 ```bash
@@ -97,16 +115,6 @@ pip install -r requirements.txt
 set GEMINI_API_KEY=your-key-here
 uvicorn main:app --reload --port 8002
 ```
-
-## Run via Docker
-
-Not yet updated for this NeMo-based version — the existing
-[Dockerfile](Dockerfile) still reflects the old deterministic-only
-implementation. `nemoguardrails` 0.24.1 (the version this pulls in) has
-no `annoy` dependency, so the current single-stage pattern may work
-as-is without needing rag-service's multi-stage/`build-essential`
-approach — that should be verified, not assumed, when Docker
-integration is picked back up.
 
 ## Examples
 

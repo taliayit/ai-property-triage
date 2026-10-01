@@ -1,3 +1,4 @@
+# GEMINI_API_KEY below is read from the .env file (loaded automatically)
 services:
   n8n:
     image: n8nio/n8n:latest
@@ -34,6 +35,8 @@ services:
     container_name: guardrails-service
     ports:
       - "8002:8002"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     networks:
       - property-triage
 
@@ -51,10 +54,6 @@ services:
     ports:
       - "8004:8004"
     environment:
-      # Reads from the shell environment or a .env file in the project
-      # root (docker compose loads .env automatically) - never hardcode
-      # the key here. Without it, the service starts but /agent/run
-      # returns 503.
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     networks:
       - property-triage
@@ -64,9 +63,8 @@ networks:
     driver: bridge
 
 volumes:
-  # References the n8n_data volume your existing manual n8n container
-  # already uses, so its workflows/credentials carry over once you stop
-  # that container and switch to `docker compose up`.
+  # External: reuses the manual n8n container's existing volume,
+  # so workflows/credentials carry over.
   n8n_data:
     external: true
   rag_chroma_data:

@@ -40,15 +40,18 @@ without the file present, `rag-service` still starts and serves
 retrieval, but `/query`'s insight generation returns `503` until the
 model is added.
 
-`langgraph-agent` needs a Gemini API key. Create a `.env` file in the
-project root (gitignored - never commit it) containing:
+`langgraph-agent` and `guardrails-service` both need a Gemini API key.
+Create a `.env` file in the project root (gitignored - never commit it)
+containing:
 
 ```
 GEMINI_API_KEY=your-key-here
 ```
 
-`docker-compose.yml` reads it automatically. Without it, `langgraph-agent`
-still starts, but `/agent/run` returns `503`.
+`docker-compose.yml` reads it automatically for both services. Without
+it, both still start, but `langgraph-agent`'s `/agent/run` and
+`guardrails-service`'s `/check/input`/`/check/output` all return `503`
+until the key is set.
 
 ## Data persistence
 
