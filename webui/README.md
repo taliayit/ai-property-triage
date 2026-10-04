@@ -38,6 +38,12 @@ length - a single substantive answer measured 394 output tokens in 84.5s
 on this hardware (~209ms/token). `OLLAMA_TIMEOUT_SECONDS` (`config.py`) is
 set to 180s, giving roughly 2x headroom over that measurement.
 
+Gradio's chat history represents each message's `content` as a plain
+string or a list of `{"type": "text", "text": ...}` parts; `chat_fn`
+normalizes either to plain text before calling Ollama, which only
+accepts a string. Errors reaching Ollama include its response body when
+available (e.g. an unknown model name), not just a generic message.
+
 ## Tab 2 - Listing Submission
 
 A form (description, comma-separated image URLs, agent name) that POSTs

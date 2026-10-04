@@ -23,13 +23,33 @@ def call_ollama(messages: list[dict]) -> str:
     return response.json()["message"]["content"]
 
 
+def content_to_text(content) -> str:
+    """Ollama's /api/chat needs plain-string content, Gradio may pass a list of text parts."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict) and block.get("type") == "text":
+                parts.append(block.get("text", ""))
+        return "".join(parts)
+    return str(content)
+
+
 def chat_fn(message: str, history: list[dict]) -> str:
-    messages = [{"role": "system", "content": CHAT_SYSTEM_PROMPT}] + history
+    messages = [{"role": "system", "content": CHAT_SYSTEM_PROMPT}]
+    messages += [{"role": turn["role"], "content": content_to_text(turn["content"])} for turn in history]
     messages.append({"role": "user", "content": message})
     try:
         return call_ollama(messages)
     except requests.RequestException as exc:
-        return f"Error reaching the local Ollama server at {OLLAMA_URL}: {exc}"
+        detail = ""
+        response = getattr(exc, "response", None)
+        if response is not None:
+            detail = f" - {response.text}"
+        return f"Error reaching the local Ollama server at {OLLAMA_URL}: {exc}{detail}"
 
 
 def submit_property(description: str, image_urls_raw: str, agent_name: str) -> str:
