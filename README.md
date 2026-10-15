@@ -1,7 +1,6 @@
 # Property Triage
 
 Local dev stack for the AI-powered real estate property triage system.
-See `CLAUDE.md` for the full project context and architecture.
 
 ## Quick start
 
